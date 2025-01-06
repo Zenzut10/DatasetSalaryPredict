@@ -1,0 +1,373 @@
+
+Data Science Salary Prediction (Glassdoor)
+
+Image
+In this project, I will be using Machine learning Models such as Multiple Linear Regression, Lasso Regression and Random Forest on my own dataset Data Science Jobs & Salaries to predict salaries, jobs and more. I will use GridSearchCV for tuning the model and Test Ensembling Techniques.
+
+add Codeadd Markdown
+Author Name: Fahad Ur Rehman
+Email----------: fahadrehmann07@gmail.com
+
+GitHub--------:
+Linkdin--------:
+
+add Codeadd Markdown
+Type Markdown and LaTeX: 
+
+
+📊 Learn About Data 📈
+
+About Dataset
+The Data in the dataset is extracted from the Glassdoor website, which is a job posting website. The dataset has data related to data science jobs and salaries and a lot more, offering a clear view of job opportunities. It is packed with essential details like job titles, estimated salaries, job descriptions, company ratings, and key company info such as location, size, and industry. Whether you're job hunting or researching, this dataset helps you understand the job market easily. Start exploring now to make smart career choices!".
+
+Perfect for adding to your Kaggle notebooks, our dataset is a treasure trove for analyzing all kinds of job-related info. Whether you're curious about salary trends or want to find the best-rated companies, this dataset has you covered. It's great for beginners and experts alike, offering lots of chances to learn and discover. You can use it to predict things or find hidden patterns—there's so much you can do! So, get ready to explore the world of jobs with our easy-to-use dataset on Kaggle.
+
+MY DATASET LINK
+Columns in Dataset:
+**Job Title:** Title of the Job
+**Salary Estimate:** Estimated salary for the job that the company provides
+**Job Description:** The description of the job
+**Rating:** Rating of the company
+**Company Name:** Name of the Company
+**Location:** Location of the job
+**Headquarters:** Headquarters of the company
+**Size:** Number of employees in the company
+**Founded:** The year company founded
+**Type of ownership:** Ownership types like private, public, government, and non-profit organizations
+**Industry:** Industry type like Aerospace, Energy where the company provides services
+**Sector:** Which type of services company provide in the industry, like industry (Energy), Sector (Oil, Gas)
+**Revenue:** Total revenue of the company
+**Competitors:** Company competitors
+🔄 Life Cycle Of Machine Learning Project 🤖
+
+Understanding the Problem Statement
+Data Checks to Perform
+Exploratory Data Analysis
+Data Pre-Processing
+Model Training
+Choose Best Model
+Model Tuning
+Test Ensembling
+Putting Model into Productino
+
+📋 TABLE OF CONTENTS 📋
+
+1. IMPORTING LIBRARIES
+
+2. LOADING DATA
+
+4. DATA CLEANING
+
+3. Exploratory Data Analysis
+
+5. Model Building
+
+6. TUNING BY GRIDSEARCHCV
+
+7. TEST ENSEMBLING
+
+8. PUTTING MODEL INTO PRODUCTION
+
+Welcome to my Notebook! Enjoy the analysis! ✌️✌️✌️
+
+If you enjoyed this analysis, an Upvote would be the cherry on top! 🍒👍
+
+
+1| 📚 IMPORTING LIBRARIES 📚
+
+add Codeadd Markdown
+import numpy as np import pandas as pd import matplotlib.pyplot as plt import seaborn as sns
+
+For Word Analysis
+from wordcloud import WordCloud, ImageColorGenerator, STOPWORDS from nltk.corpus import stopwords from nltk.tokenize import word_tokenize import nltk nltk.download('stopwords')
+
+import warnings warnings.filterwarnings('ignore')
+
+#Importing Machine learning Models from sklearn.model_selection import train_test_split
+
+from sklearn.linear_model import LinearRegression from sklearn.model_selection import cross_val_score from sklearn.model_selection import GridSearchCV
+
+from sklearn.linear_model import Lasso
+
+from sklearn.ensemble import RandomForestRegressor
+
+from sklearn.metrics import mean_absolute_error
+
+import pickle
+
+
+2| 🔄 LOADING DATASET 🤖
+
+add Codeadd Markdown
+df = pd.read_csv("/kaggle/input/data-science-jobs-and-salary-glassdoor/glassdoor_jobs.csv")
+
+2) Data Checks to Perform
+
+Check Missing values
+Check Duplicates
+Check data type
+Check the number of unique values of each column
+Check statistics of the dataset
+Check various categories present in the different categorical columns
+add Codeadd Markdown
+
+3| 🧹 Data Cleaning 🛁
+
+add Codeadd Markdown
+df.columns
+
+df.shape
+
+pd.set_option('display.max_columns', None) df.head(10)
+
+By looking into the scraped data we will do the following tasks.
+Tasks List:
+
+1. Renaming Columns.
+2. Salary Parsing.
+3. Company Name text only.
+4. State of Field.
+5. Age of Company.
+6. Parsing of job description (python, etc.)
+add Codeadd Markdown
+1. Renaming Columns:
+
+add Codeadd Markdown
+def title_simplifier(title): if 'data scientist' in title.lower(): return 'data scientist' elif 'data engineer' in title.lower(): return 'data engineer' elif 'analyst' in title.lower(): return 'analyst' elif 'machine learning' in title.lower(): return 'mle' elif 'manager' in title.lower(): return 'manager' elif 'director' in title.lower(): return 'director' else: return 'na'
+
+def seniority(title): if 'sr' in title.lower() or 'senior' in title.lower() or 'lead' in title.lower() or 'principal' in title.lower(): return 'senior' elif 'jr' in title.lower() or 'jr.' in title.lower(): return 'jr' else: return 'na'
+
+#job title and seniority
+
+Fix state Los Angeles
+JOb description in length
+Competitor count
+Hourly wage to annual
+2. Salary Parsing:
+
+Removing the -1 in the salary estimate column
+
+add Codeadd Markdown
+df = df[df['Salary Estimate']!= '-1'] df.head(10)
+
+Removing the glassdoor est text in the salary column:
+add Codeadd Markdown
+df['Salary Estimate'] = df['Salary Estimate'].apply(lambda x: x.split('(')[0])
+
+df.head(10)
+
+Removing the k and $ sign from the Salary Estimate:
+Removing the k and $ sign from the salary column so that we can predict or do analysis on numbers
+
+add Codeadd Markdown
+df['Salary Estimate'] = df['Salary Estimate'].apply(lambda x: x.replace('K','').replace('$','')) df.head(10)
+
+The K and $ sign are removed from the column.
+Its a range of numbers we have to convert it into a single number so it can be used for analysis and prediction.
+
+add Codeadd Markdown
+Removing Per hour & Employee provided salary text in Salary Estimated Column:
+add Codeadd Markdown
+df['PerHour'] = df['Salary Estimate'].apply(lambda x: 1 if 'per hour' in x.lower() else 0) df['Employee'] = df['Salary Estimate'].apply(lambda x: 1 if 'employee provided salary:' in x.lower() else 0)
+
+df['Salary Estimate'] = df['Salary Estimate'].apply(lambda x: x.lower().replace('per hour', '')) df['Salary Estimate'] = df['Salary Estimate'].apply(lambda x: x.lower().replace('employer provided salary:', ''))
+
+pd.set_option('display.max_rows', 10) df
+
+Now the per hour text and employee provided salary text is removed from the salary estimated column.
+Only the integer value is remained but there still a problem that the integer is in interval and we have to convert into a single integer. ................................................................................................................................................................................................................................................................
+
+add Codeadd Markdown
+Splitting the Salary estimated column:
+The first will be the minimum salary.
+The second will be the Maximumn Salary.
+add Codeadd Markdown
+df['Min_Salary'] = df['Salary Estimate'].apply(lambda x: int(x.split('-')[0])) df['Max_Salary'] = df['Salary Estimate'].apply(lambda x: int(x.split('-')[1]))
+
+Now two columns are created Min and Max salary.
+To get the single integer in Salary Estimate column we will take average of these two columns
+add Codeadd Markdown
+df['Salary Estimate']= (df['Min_Salary'] + df['Max_Salary'])/2
+
+df.head()
+
+Now the Salary Estimate column is completely clean and ready to use.
+NOTE: The datatype of values is float and if for some reason you want to convert in into integer datatype use the following line of code.
+df['Salary Estimate']= (df['Min_Salary'] + df['Max_Salary'])//2
+add Codeadd Markdown
+df.drop(['Min_Salary','Max_Salary'] , axis =1)
+
+3.Cleaning Company Name Column:
+
+add Codeadd Markdown
+df.head(10)
+
+df['Company Name'] = df.apply(lambda x: x['Company Name'] if x['Rating']<0 else x['Company Name'][:-1], axis = 1)
+
+df['Company Name']= df['Company Name'].apply(lambda x: x.split('\n')[0])
+
+Now the Company Name column is cleaned and ready to use for EDA
+
+4. State of Field Column Cleaning:
+
+We can create the state column from the location column
+
+add Codeadd Markdown
+df['State'] = df.Location.apply(lambda x: x.split(',')[1])
+
+df.head(2)
+
+df= df.drop(['States'], axis = 1)
+df.head()
+Lets see if the location & Headquarter is same
+add Codeadd Markdown
+df['Same State'] = df.apply(lambda x: 1 if x.Location==x.Headquarters else 0, axis =1) df.head()
+
+5. Age of Company:
+
+add Codeadd Markdown
+df['Age'] = df['Founded'].apply(lambda x: x if x<1 else 2023-x)
+
+6. Parsing the Job Description (python etc):
+
+python.
+R Studio.
+Spark.
+AWS.
+Excel.
+add Codeadd Markdown
+- Competitor Count:
+add Codeadd Markdown
+- Hourly Wage to annual
+add Codeadd Markdown
+Now Everything is ready for EDA.
+add Codeadd Markdown
+
+4| 📊 Exploratory Data Analysis 📊
+
+add Codeadd Markdown
+Checking Outliers by boxplot
+add Codeadd Markdown
+Columns:
+
+Salary Estimate.
+Age.
+desc_len.
+Rating.
+add Codeadd Markdown
+Correlation between Variables
+add Codeadd Markdown
+Clearing the Large plot
+add Codeadd Markdown
+lets only look for the datascience
+add Codeadd Markdown
+Salary By Rating
+add Codeadd Markdown
+Words Analysis in Description by Word Cloud Plot
+add Codeadd Markdown
+
+5| 🏗️ Model Building For Salary Prediction 🏗️
+
+add Codeadd Markdown
+Steps to be Followed while building Model:
+
+1. Choose Relevant Columns.
+2. Get Dummy Dates.
+3. Train Test Split.
+4. Multiple Linear Regression.
+5. Lasso Regression.
+6. Random Forest.
+7. Tune Models GridSearchCV.
+8. Test Ensembles.
+add Codeadd Markdown
+1.. Choosing Relevant Columns:
+
+add Codeadd Markdown
+2. Get Dummy Dates
+
+add Codeadd Markdown
+3. Train Test Split
+
+add Codeadd Markdown
+4. Multiple Linear Regression
+
+add Codeadd Markdown
+5. Lasso Regression
+
+add Codeadd Markdown
+It means that the lasso Regression model or Algorithm is best from LinearRegresion according to our data
+
+add Codeadd Markdown
+Checking how much we improve our model
+add Codeadd Markdown
+Now training the lasso model again on the alpha value equal to 0.3
+
+add Codeadd Markdown
+In Lasso Regression the error we record is:
+add Codeadd Markdown
+
+we can see that improve our from -21.09619987218103 to -18.272763 and that pretty awesome
+add Codeadd Markdown
+6. Random Forest Model or Algorithm
+
+- Calculating its error.
+- Trying to minimize the error.
+add Codeadd Markdown
+Training the Model
+add Codeadd Markdown
+Calculating the error of Random Forest Model
+add Codeadd Markdown
+Its quit awesome that Random Forest Model is doing for on our data.
+
+without Minimizing the error it performing better than the last algorithms that we apply on our data.
+
+add Codeadd Markdown
+
+6| 🏗️ Tunning by GridsearchCV 🏗️
+
+Lets understand how it works:
+- we will give the parameters that we want in model.
+- Based on those parameters it will analyse algorithm.
+- We will select which one is best according to these analysis of GridSearchCV.
+add Codeadd Markdown
+Summary of GridSearchCV:
+Looks like we achieve much better or we minimize the error from -15.12471850484541 to 0.6424335492673592 amazing right.
+
+we can achieve the accuracy of our model very high if we use the following parameters according to GridSearchCV method:
+
+Parameters:
+
+1. criterion should be `absolute_error`. 2. max_features should be `None`. 3. n_estimators should be `40`.
+add Codeadd Markdown
+
+7| 🏗️ Model Training or Test Ensembles: 🏗️
+
+Now we can train our because we know by now everything that are needed for our model to perform outstanding...
+
+add Codeadd Markdown
+Always two of them which are best
+add Codeadd Markdown
+This value should in between the value of tpred_lml and tpred_rf and it is in between so it correct and our model is not over tranied.
+
+LinearRegression is suitable for our data which can be seen cause it has high value.
+
+add Codeadd Markdown
+
+8| 🏗️ Putting the Model Into Production: 🏗️
+
+Using pickle to store the neccessory values or variables into a file of pickle so that it can be used in the flask app....
+
+add Codeadd Markdown
+The Above value is the prediction.
+
+Everything is good now its time to built the flask app for it but for now in this notebook everthing is finished.....
+add Codeadd Markdown
+
+Thank for reading my analysis. ✌️✌️✌️
+If you any questions or advice please write in the comment . ❤️❤️
+add Codeadd Markdown
+
+Vote ❤️😃
+If you enjoyed this analysis, an Upvote would be the cherry on top! 🍒👍
+The End 🤝🎉🤝🎉¶
+add Codeadd Markdown
